@@ -73,6 +73,10 @@ exports.handler = async function (event, context) {
           .toBuffer();
 
         const disclaimerHeight = 150;
+        const resizedLogo = await sharp(logoBuffer)
+          .resize({ height: 100 }) // ensures logo fits
+          .toBuffer();
+
         const disclaimerBox = await sharp({
           create: {
             width,
@@ -81,9 +85,15 @@ exports.handler = async function (event, context) {
             background: "#ffffff",
           },
         })
-          .composite([{ input: logoBuffer, top: disclaimerHeight - 100, left: 20 }])
-          .png()
-          .toBuffer();
+        .composite([
+          {
+            input: resizedLogo,
+            top: 25,
+            left: 20,
+          }
+        ])
+        .png()
+        .toBuffer();
 
         const finalImage = await sharp({
           create: {
