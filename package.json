@@ -1,0 +1,25 @@
+{
+  "name": "dg-approval-portal",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aswin-dg/dg-approval-portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aswin-dg/dg-approval-portal/issues"
+  },
+  "homepage": "https://github.com/aswin-dg/dg-approval-portal#readme",
+  "description": "",
+  "dependencies": {
+    "googleapis": "^149.0.0",
+    "mime-types": "^3.0.1",
+    "sharp": "^0.34.2"
+  }
+}
