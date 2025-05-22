@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const SHEET_ID = "15savw3NvzVurjuXAmCgm70SldnhE3V05OnAXX0CSTL8";
 const FOLDER_ID = "12ocOXOcPFullB06KYeDWTOms9wLC9b6Q";
-const LOGO_PATH = "./assets/dg-logo.png";
+const LOGO_PATH = path.resolve(__dirname, 'assets', 'dg-logo.png');
 const DISCLAIMER_TEXT = "Note: Respected Customer, the font size, logo size etc, will be printed same exactly as seen here. Your proof once approved, the printing process will be started within 10 minutes. So, further correction will not be encouraged. Incase of any correction, you are requested to bear the processing charges till the processed stage. The delivery schedule also  will be changed.";
 
 exports.handler = async function (event, context) {
