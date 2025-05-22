@@ -1,16 +1,20 @@
-const path = require('path');
-const fs = require('fs');
 const { google } = require("googleapis");
 const { Readable } = require("stream");
 const sharp = require("sharp");
-const { GoogleAuth } = require("google-auth-library");
-const { JWT } = require("google-auth-library");
-const { v4: uuidv4 } = require("uuid");
+const axios = require("axios");
+const busboy = require("busboy");
 
 const SHEET_ID = "15savw3NvzVurjuXAmCgm70SldnhE3V05OnAXX0CSTL8";
 const FOLDER_ID = "12ocOXOcPFullB06KYeDWTOms9wLC9b6Q";
-const LOGO_PATH = path.join(__dirname, 'dg-logo.png');
-const DISCLAIMER_TEXT = "Note: Respected Customer, the font size, logo size etc, will be printed same exactly as seen here. Your proof once approved, the printing process will be started within 10 minutes. So, further correction will not be encouraged. Incase of any correction, you are requested to bear the processing charges till the processed stage. The delivery schedule also  will be changed.";
+const DISCLAIMER_TEXT =
+  "Note: Respected Customer, the font size, logo size etc, will be printed same exactly as seen here. Your proof once approved, the printing process will be started within 10 minutes. So, further correction will not be encouraged. Incase of any correction, you are requested to bear the processing charges till the processed stage. The delivery schedule also  will be changed.";
+
+const getLogoBuffer = async () => {
+  const fileId = "1fNog-TSYzW8yeMzDD2XBZUv8_BVahV0Q";
+  const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  const response = await axios.get(url, { responseType: "arraybuffer" });
+  return Buffer.from(response.data);
+};
 
 exports.handler = async function (event, context) {
   try {
@@ -18,7 +22,6 @@ exports.handler = async function (event, context) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    const busboy = require("busboy");
     const contentType = event.headers["content-type"] || event.headers["Content-Type"];
     const bb = busboy({ headers: { "content-type": contentType } });
 
@@ -44,8 +47,7 @@ exports.handler = async function (event, context) {
           });
         }
 
-        const fs = require("fs");
-        const logoBuffer = fs.readFileSync(LOGO_PATH);
+        const logoBuffer = await getLogoBuffer();
 
         const metadata = await sharp(fileBuffer).metadata();
         const width = metadata.width;
@@ -79,9 +81,7 @@ exports.handler = async function (event, context) {
             background: "#ffffff",
           },
         })
-          .composite([
-            { input: logoBuffer, top: disclaimerHeight - 100, left: 20 },
-          ])
+          .composite([{ input: logoBuffer, top: disclaimerHeight - 100, left: 20 }])
           .png()
           .toBuffer();
 
@@ -102,8 +102,12 @@ exports.handler = async function (event, context) {
 
         const auth = new google.auth.GoogleAuth({
           keyFile: "./credentials.json",
-          scopes: ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"],
+          scopes: [
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets",
+          ],
         });
+
         const authClient = await auth.getClient();
         const drive = google.drive({ version: "v3", auth: authClient });
         const sheets = google.sheets({ version: "v4", auth: authClient });
@@ -117,6 +121,7 @@ exports.handler = async function (event, context) {
           mimeType: "image/png",
           body: Readable.from(finalImage),
         };
+
         const file = await drive.files.create({
           resource: fileMetadata,
           media: media,
@@ -124,6 +129,7 @@ exports.handler = async function (event, context) {
         });
 
         const fileId = file.data.id;
+
         await drive.permissions.create({
           fileId,
           requestBody: {
@@ -131,6 +137,7 @@ exports.handler = async function (event, context) {
             type: "anyone",
           },
         });
+
         const viewLink = `https://drive.google.com/uc?id=${fileId}`;
 
         await sheets.spreadsheets.values.append({
