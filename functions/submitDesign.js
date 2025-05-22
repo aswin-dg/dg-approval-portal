@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const { google } = require("googleapis");
 const { Readable } = require("stream");
 const sharp = require("sharp");
