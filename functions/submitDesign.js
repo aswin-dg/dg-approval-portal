@@ -8,7 +8,6 @@ const { v4: uuidv4 } = require("uuid");
 
 const SHEET_ID = "15savw3NvzVurjuXAmCgm70SldnhE3V05OnAXX0CSTL8";
 const FOLDER_ID = "12ocOXOcPFullB06KYeDWTOms9wLC9b6Q";
-const LOGO_PATH = path.join(__dirname, 'DGlogo.png');
 const DISCLAIMER_TEXT = "Note: Respected Customer, the font size, logo size etc, will be printed same exactly as seen here. Your proof once approved, the printing process will be started within 10 minutes. So, further correction will not be encouraged. Incase of any correction, you are requested to bear the processing charges till the processed stage. The delivery schedule also  will be changed.";
 
 exports.handler = async function (event, context) {
@@ -43,59 +42,23 @@ exports.handler = async function (event, context) {
           });
         }
 
-        const logoBuffer = fs.readFileSync(LOGO_PATH);
         const metadata = await sharp(fileBuffer).metadata();
         const width = metadata.width;
         const height = metadata.height;
 
-        const watermarkLogo = await sharp(logoBuffer)
-          .resize({ width: Math.floor(width / 6) })
-          .png()
-          .toBuffer();
-
-        const watermarkTiles = [];
-        const rows = 3;
-        const cols = 3;
-        const stepY = Math.floor(height / rows);
-        const stepX = Math.floor(width / cols);
-
-        for (let row = 0; row < rows; row++) {
-          for (let col = 0; col < cols; col++) {
-            watermarkTiles.push({
-              input: watermarkLogo,
-              top: row * stepY,
-              left: col * stepX,
-              blend: "overlay",
-              opacity: 0.1
-            });
-          }
-        }
-
-        const watermarked = await sharp(fileBuffer)
-          .composite(watermarkTiles)
-          .toBuffer();
-
         const disclaimerHeight = 180;
-
-        const resizedLogo = await sharp(logoBuffer)
-          .resize({ height: 100 })
-          .toBuffer();
 
         const disclaimerSvg = `
           <svg width="${width}" height="${disclaimerHeight}">
             <style>
               .text { fill: black; font-size: 24px; font-family: sans-serif; }
             </style>
-            <text x="140" y="60" class="text">${DISCLAIMER_TEXT}</text>
-            <text x="140" y="120" class="text">Order No: ${orderNumber}</text>
+            <text x="20" y="60" class="text">${DISCLAIMER_TEXT}</text>
+            <text x="20" y="120" class="text">Order No: ${orderNumber}</text>
           </svg>
         `;
 
         const disclaimerTextBuffer = Buffer.from(disclaimerSvg);
-        const disclaimerTextImage = await sharp(disclaimerTextBuffer)
-          .resize({ width })
-          .png()
-          .toBuffer();
 
         const disclaimerBox = await sharp({
           create: {
@@ -106,8 +69,7 @@ exports.handler = async function (event, context) {
           }
         })
           .composite([
-            { input: resizedLogo, top: 30, left: 20 },
-            { input: disclaimerTextImage, top: 0, left: 0 }
+            { input: disclaimerTextBuffer, top: 0, left: 0 }
           ])
           .png()
           .toBuffer();
@@ -121,7 +83,7 @@ exports.handler = async function (event, context) {
           },
         })
           .composite([
-            { input: watermarked, top: 0, left: 0 },
+            { input: fileBuffer, top: 0, left: 0 },
             { input: disclaimerBox, top: height, left: 0 }
           ])
           .png()
