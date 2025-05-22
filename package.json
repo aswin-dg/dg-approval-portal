@@ -18,6 +18,7 @@
   "homepage": "https://github.com/aswin-dg/dg-approval-portal#readme",
   "description": "",
   "dependencies": {
+    "busboy": "^1.6.0",
     "googleapis": "^149.0.0",
     "mime-types": "^3.0.1",
     "sharp": "^0.34.2"
